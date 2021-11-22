@@ -314,4 +314,4 @@ sampling_rate= 16000
 lower_edge_hertz = 400            # Quality no effect on Excution time
 upper_edge_hertz = 2700          ####### Note : upper should be < sampleRate/2 
 '''
-Compute_SNR(Inputfoldername,OutputFolderName,length= 0.016,stride=0.008,MFCC= 10,num_mel_bins=16,sampling_rate= 16000,lower_edge_hertz=400,upper_edge_hertz=2700 , debug = debug)
+Compute_SNR(Inputfoldername,OutputFolderName,length= 0.016,stride=0.008,MFCC= 10,num_mel_bins=32,sampling_rate= 16000,lower_edge_hertz=400,upper_edge_hertz=2700 , debug = debug)
