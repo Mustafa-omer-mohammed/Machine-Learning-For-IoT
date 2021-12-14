@@ -1,0 +1,150 @@
+a = {'x' : 3 , 'y' : 2.2}
+
+import json
+
+
+a_str = json.dumps(a)
+
+print(a_str)
+print(type(a_str))
+
+a_dict = json.loads(a_str)
+
+print(a_dict)
+print(type(a_dict))
+
+b = {'x' : [1,2,3] , 'y' : [2.2 , 3.3]}
+
+b_str = json.dumps(b)
+
+print(b_str)
+print(type(b_str))
+
+b_dict = json.loads(b_str)
+
+b_dict['x']
+
+# LAB 5 
+# EX-1 
+
+import cherrypy
+import json 
+
+
+class Calculator (object):
+    def GET (self , *path , **query) :
+        #PATH IS A LIST: CONTAINS ALL THE ELEMENTS OF THE REQUEST PATH 
+        # QUERY IS A DICT: CONTAISN ALL THE PARAMETHERS OF THE REQUEST
+        operation=path[0]
+        
+        #Operand 1
+        operand1=query.get('op1')
+        if operand1=None:
+                raise cherrypy.HTTPError(400, 'wrong query 1')
+        
+        #Operand 2
+        operand2=query.get('op2')   
+        if operand2=None:
+            raise cherrypy.HTTPError(400, 'wrong query 2')
+
+        if len(path) !=1:
+            raise cherrypy.HTTPError(400, 'wrong path')
+            
+        if len(query) !=2:
+            raise cherrypy.HTTPError(400, 'wrong query')
+        
+        operand1=float(operand1)
+        operand2=float(operand2)
+        
+        #operation=
+        
+        if operation== 'add':
+            result= operand1+operand2
+        elif operation=='sub'
+            result= operand1- operand2
+        else:
+             raise cherrypy.HTTPError(400, 'wrong operation')
+        
+        output={ 'command':operation
+                'op1': operand1
+                'op2': operand2
+                'result': result
+        }
+            
+        output_str=json.dumps(output)
+        
+        return output_str
+        
+        print(path )
+        print(query)
+        
+         #cherry.config,update({''})
+        #command on one terminal: python <name_of_file>.py
+        #command: curl =X GET http://localhost:8080/add
+        #command: curl =X GET http://localhost:8080/add?op1=10&op2=12.
+        
+    def POST (self , *path , **query) :
+        body=cherrypy.request.body.read()
+        #convert to a python object
+        body=json.loads(body)
+        print('path', path)
+        print('query', query)
+        print('body', body)
+        pass
+    
+        #command on one terminal: python <name_of_file>.py
+        #command: curl =X GET "http://localhost:8080/add"
+        #command: curl =X GET "http://localhost:8080/add?op1=10&op2=12" -d {operand: [1,2]}
+         
+    def PUT (self , *path , **query) :
+        pass
+    def DELETE (self , *path , **query) :
+        pass
+    
+    
+if __name__ = '__main__'
+    conf= {'/':{'request.distpath': cherrypy.dispatch.MethodDispacher()} }
+    cherry.tree.mount(Calculator(), ''. conf)
+    cherry.config.update({'server.socket_host':'0.0.0.0'})
+    cherry.config.update({'server.socket_port':'8080'})
+    cherry.config.start()
+    cherry.config.block()
+    
+    #cherry.config,update({''})
+    #command on one terminal: python <name_of_file>.py
+    #command: curl =X GET http://localhost:8080/add
+    #command: curl =X GET http://localhost:8080/add?op1=10&op2=12.
+    
+
+# EX 4
+
+import requests
+
+command='add'
+op1=1
+op2=2
+
+url='http://localhost:8080/{}?op1={}&op2={}'.format(command, op1, op2)
+#################################################### REQUEST
+r=request.get(url)
+
+#run the web service python bla bla 
+#run this code for the client platform 
+
+
+#################################################### PUT
+#body={'comman': command, 'operand':[1,2]} #run it with 
+#r= request.put(url, json=body)
+
+
+print(r.status_code)
+print(r.json())
+
+
+'''
+comunication with the computer and the raspberry
+
+PC as the web
+-> get the ip of the raspberry pi
+-> 
+
