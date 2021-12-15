@@ -173,7 +173,7 @@ lstm = tf.keras.Sequential([
         tf.keras.layers.Dense(units=2*output_steps),
         tf.keras.layers.Reshape([output_steps, 2]), 
     ])
-
+############################################################################ initiate model instance  ############################################################################
 MODELS = {'mlp': mlp, 'cnn': cnn, 'lstm': lstm}
 model = MODELS['lstm']  #
 
@@ -185,13 +185,13 @@ model = MODELS['lstm']  #
 import pydot
 tf.keras.utils.plot_model(model, to_file='model.png',show_layer_names=True , show_shapes = True)
 
-# Define losses & Optimizer & metrics
+############################################################################ Define losses & Optimizer & metrics ############################################################################
 
 loss =   tf.keras.losses.MeanSquaredError()                       #tf.keras.losses.MeanSquaredError()
 optimizer = tf.keras.optimizers.Adam()
 metrics = [MultiOutputMAE()]
 
-# Training and optimizing
+############################################################################ Training and optimizing ############################################################################
 
 model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
 
@@ -202,40 +202,4 @@ model.fit(train_ds, epochs=20,   validation_data=val_ds,callbacks=[tb_callback])
 tb_run += 1
 
 print(model.summary())
-
-# How to change to multi output labels 
-
-# x = np.arange(18)
-
-# x = x.reshape((9,2))
-
-# print(x.shape)
-# print(x)
-# print(x.mean(axis=0))
-
-
-
-# print(x[:6,:].shape)
-# print(x[:6,:])
-
-# print(x[-3:,:].shape)
-# print(x[-3:,:])
-
-# train_ds.element_spec
-
-# how to change the multi output Mean Square Error
-
-# # Multi 
-# x=np.arange(3*2).reshape(3,2)
-
-# print(x)
-
-# y= np.arange(6)[::-1].reshape(x.shape)
-
-# # y.reshape(3,2)
-# print(y)
-
-# z = np.abs(y-x)
-
-# print(np.mean(z,axis=0))
 
