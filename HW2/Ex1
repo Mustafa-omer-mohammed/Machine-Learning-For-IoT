@@ -1,3 +1,4 @@
+############################################################################ Importing Liberaries ############################################################################
 import argparse
 import numpy as np
 import os
@@ -8,8 +9,7 @@ from tensorflow import keras
 
 
 # parser = argparse.ArgumentParser()
-# parser.add_argument('--model', type=str, required=True, help='model name')
-# parser.add_argument('--labels', type=int, required=True, help='model output')
+# parser.add_argument('--version', type=int, required=True, help='version --> can be ["a" , "b"]')
 # args = parser.parse_args()
 
 seed = 42
@@ -42,12 +42,13 @@ print (mean.shape)
 # WindowGenerator
 
 input_width = 6
-version = "a"                     ####### Remove this later
-if version == "a" :               ####### Remember this is the argparse Arument --version 
+version = args.version                   
+if version == "a" :               
     output_steps = 3
 if version == "b" :
     output_steps = 9
 
+############################################################################ Create the WindowGenerator Class #######################################################
 
 class WindowGenerator:
     def __init__(self, input_width, output_steps, mean, std):
@@ -91,21 +92,14 @@ class WindowGenerator:
 
         return ds
 
-
-
-# window = np.arange(18)
-# window = window.reshape(9,2)
-# print(len(window))
-# print(window)
-# print(window[:6].shape)
-# print(window[-3:].shape)
+############################################################################ Create datasets ############################################################################
 
 generator = WindowGenerator(input_width, output_steps, mean, std)
 train_ds = generator.make_dataset(train_data, True)
 val_ds = generator.make_dataset(val_data, False)
 test_ds = generator.make_dataset(test_data, False)
 
-# checking the shapes 
+############################################################################ checking the shapes ############################################################################
 
 print(f"data shape before split {data.shape}")
 
@@ -125,9 +119,7 @@ print(inp.shape)
 print(label.shape)
 
 
-# MultiOutputMAE
-
-# # Exercise 1.7
+############################################################################ Ex 1.7 MultiOutputMAE Metric ############################################################################
 class MultiOutputMAE(tf.keras.metrics.Metric):
     def __init__(self, name='mean_absolute_error', **kwargs):
         super().__init__(name=name, **kwargs)
@@ -151,30 +143,9 @@ class MultiOutputMAE(tf.keras.metrics.Metric):
 
         return result
 
-class MultiOutputMSE(tf.keras.metrics.Metric):
-    def __init__(self, name='mean_squared_error', **kwargs):
-        super().__init__(name=name, **kwargs)
-        self.total = self.add_weight('total', initializer='zeros', shape=(2,))
-        self.count = self.add_weight('count', initializer='zeros')
 
-    def update_state(self, y_true, y_pred, sample_weight=None):
-        error = tf.square(y_pred.reshape(y_true.shape)- y_true)     # change here y_pred.reshape(y_true.shape)
-        error = tf.reduce_mean(error, axis=0)
-        self.total.assign_add(error)
-        self.count.assign_add(1.)
 
-        return
-
-    def reset_states(self):
-        self.count.assign(tf.zeros_like(self.count))
-        self.total.assign(tf.zeros_like(self.total))
-
-    def result(self):
-        result = tf.math.divide_no_nan(self.total, self.count)
-
-        return result
-
-# building the models
+############################################################################ building the models ############################################################################
 
 # Exercise 1.3
 mlp = tf.keras.Sequential([
