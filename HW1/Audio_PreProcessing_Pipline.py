@@ -156,8 +156,6 @@ def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_me
     return mfccs_slow, execution_time , linear_to_mel_weight_matrix_s , mfccs_slow_shape
 
 
-#################################################################      here
-
 #####################################################            MFCC_FAST          ###########################################################################
 def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC, num_mel_bins, sampling_rate , lower_edge_hertz, upper_edge_hertz , debug, linear_to_mel_weight_matrix = None , compute = False) :
     
@@ -173,11 +171,9 @@ def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC
 
     
     tf_audio, rate = tf.audio.decode_wav(audio)    # The -32768 to 32767 signed 16-bit values will be scaled to -1.0 to 1.0 in float.
-    # decode to tf tensor it's a design choice but it's better optimized  , audio is raw data not array we need to take just the tf_audio, rate  not the other meta data 
-    #print(f'Rate: {rate.numpy()}')
+    # decode to tf tensor it's a design choice but it's better optimized  
     tf_audio = tf.squeeze(tf_audio, 1)        
-    # because it needs also the number of channels = number of used microphones in our case it's only = 1 
-    # Remember : f.signal.stft takes frame_length, frame_step as Number of samples Not as in seconds so we need to apply the following 
+    # f.signal.stft takes frame_length, frame_step as Number of samples Not as in seconds so we need to apply the following 
     frame_length = int(length * rate.numpy())   # (args.length [in seconds] * rate.numpy() [in Hz 1/s]) = sec*1/s => Number of samples
     frame_step = int(stride * rate.numpy())     # (args.Stride [in seconds] * rate.numpy() [in Hz 1/s]) = sec*1/s => Number of samples
     #print('Frame length:', frame_length)
@@ -186,7 +182,7 @@ def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC
     stft = tf.signal.stft(tf_audio, frame_length ,  frame_step , fft_length=frame_length) #Takes signl in form of A [..., samples] float32/float64 Tensor of real-valued signals.
 
     #print('Execution Time: {:.4f}s'.format(end-start))
-    spectrogram = tf.abs(stft)                         # because the output is a complex number and we are only interested in the magnitude (the real part) wqe should apply absolute |stft|
+    spectrogram = tf.abs(stft)                         #  the output is a complex number and we are only interested in the magnitude (the real part), we apply absolute |stft|
     del stft 
 ##################################     
     if compute == True :
@@ -195,8 +191,8 @@ def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC
     else :
         linear_to_mel_weight_matrix_f = linear_to_mel_weight_matrix
     # print('linear shape:', linear_to_mel_weight_matrix)
-    mel_spectrogram = tf.tensordot(spectrogram, linear_to_mel_weight_matrix_f, 1)          # this depends on the input audio file
-    # print('this:', mel_spectrogram)
+    mel_spectrogram = tf.tensordot(spectrogram, linear_to_mel_weight_matrix_f, 1)          # this depends on the input audio file shape
+
 
     mel_spectrogram.set_shape(spectrogram.shape[:-1].concatenate(linear_to_mel_weight_matrix_f.shape[-1:]))
 #######################
@@ -230,8 +226,6 @@ def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC
     execution_time = end - start                                 ####### Compute the excution Time 
     
     return mfccs_fast, execution_time , linear_to_mel_weight_matrix_f , mfccs_fast_shape
-
-##################################################################End the fast
 
 ########################################################### Compute SNR Function ###########################################################
 
