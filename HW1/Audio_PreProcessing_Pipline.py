@@ -9,7 +9,7 @@ from numpy import linalg as LA
 import pandas as pd
 import argparse
 import itertools
-from Utility import Change_frequency_edge_hertz , SNR , MFCC_FAST , MFCC_SLOW , Compute_SNR , Optimum
+# from Utility import Change_frequency_edge_hertz , SNR , MFCC_FAST , MFCC_SLOW , Compute_SNR , Optimum
 from subprocess import Popen
 Popen('sudo sh -c "echo performance >''/sys/devices/system/cpu/cpufreq/policy0/scaling_governor"',shell=True).wait()
 
@@ -41,7 +41,7 @@ def Compute_SNR(Inputfoldername, OutputFolderName, length, stride , MFCC, num_me
         
         
         if filename.endswith(".wav"):
-            if i == 0 :
+            if i == 0 :        # to speed up the processing pipline excution time, the linear_to_mel_weight_matrix is computed once from the first record. 
                 mfccs_slow, Time_slow , linear_to_mel_weight_matrix_s , mfccs_slow_shape =  MFCC_SLOW (Inputfoldername, filename, OutputFolderName ,compute = True , debug = debug) 
                 mfccs_fast, Time_fast , linear_to_mel_weight_matrix_f , mfccs_fast_shape = MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC, num_mel_bins, sampling_rate , lower_edge_hertz, upper_edge_hertz, compute = True , debug = debug)
                 SNR_final = SNR(mfccs_slow,mfccs_fast)
@@ -62,24 +62,6 @@ def Compute_SNR(Inputfoldername, OutputFolderName, length, stride , MFCC, num_me
         Average_Execution_SLOW= (Total_Execution_SLOW/i)*1000
         Average_Execution_FAST=(Total_Execution_FAST/i)*1000
         Average_SNR=Total_SNR/i 
-#####################################################  Printing the Results          ###########################################################################
-    # print the shape of  the matrix mfccs_slow_shape  
-    if Average_Execution_FAST <= 18.5 :
-	    print(f'the shape of  the matrix mfccs_slow_shape :{mfccs_slow_shape} ')  
-	    # print the shape of  the matrix mfccs_fast_shape  
-	    print(f'the shape of  the matrix mfccs_fast_shape :{mfccs_fast_shape} ') 
-	    
-	    # Relative time excution reducton by the fast pipline with respect to slow    
-	    print(f'The fast pipeline has :{100*(Average_Execution_SLOW - Average_Execution_FAST)/Average_Execution_SLOW :0.2f} % lower execution time compared to slow pipeline')
-	    #Average time of SLOW
-	    print(f'Average time of SLOW:{Average_Execution_SLOW} ms')
-	    #Average time of FAST
-	    print(f'Average time of FAST:{Average_Execution_FAST} ms')
-	    #Average value of the SNR
-	    print(f'Average value of the SNR:{Average_SNR} dB')
-
-
-    return Average_SNR, Average_Execution_FAST, Average_Execution_SLOW
     
 
 #####################################################            MFCC_SLOW          ###########################################################################
