@@ -266,41 +266,43 @@ def Change_frequency_edge_hertz (Inputfoldername , OutputFolderName , debug) :
         print('#' * 100)  
     print(data) #####################################################################################################
 
-# here
 ########################################################################### main function ###########################################################################
 
 
+def main():
 
+    #the input parameters for the command line
+    parser=argparse.ArgumentParser()
 
-#the input parameters for the command line
-parser=argparse.ArgumentParser()
+    parser.add_argument('--Inputfoldername',  type=str, help='Input folder name contains the input files for the pipeline')
+    parser.add_argument('--OutputFolderName', type=str, help='Output folder name')
+    parser.add_argument('--debug', default=False, action= 'store_true', help='debug can be either False/True if True we will not pring the results and excute the code for only 100 files')
+    parser.add_argument('--operation',type= str ,  default='computeSNR', help='define the operation to be excuted between[frequency_edge , computeSNR]')
+    args = parser.parse_args()
 
-parser.add_argument('--Inputfoldername',  type=str, help='Input folder name contains the input files for the pipeline')
-parser.add_argument('--OutputFolderName', type=str, help='Output folder name')
-parser.add_argument('--debug', default=False, action= 'store_true', help='debug can be either False/True if True we will not pring the results and excute the code for only 100 files')
+    #parser info
+    Inputfoldername = f"./{args.Inputfoldername}"
+    OutputFolderName = f"./{args.OutputFolderName}"
+    operation = args.operation        ####### if frequency_edge apply hyper parameter tuning to find the best combination for Fast MFCC pipeline
+    debug = args.debug ######## apply debuging by selecting only small portion of the files.
 
-args = parser.parse_args()
-
-#parser info
-Inputfoldername = f"./{args.Inputfoldername}"
-OutputFolderName = f"./{args.OutputFolderName}"
-
-debug = args.debug 
-
-# print(f"Excute {operation}")
-########################################################## Change_frequency_edge_hertz to recver from the dropping in quality due to reducing num num_mel_bins to 32
-"""    
-if operation == "frequency_edge" :
-print(f"excuting frequency_edge")
-Change_frequency_edge_hertz(Inputfoldername = Inputfoldername ,OutputFolderName = OutputFolderName , debug= debug )
-"""
-'''
-length= 0.016
-stride = 0.008
-MFCC= 10                       ###### Remember this changes the shape of the final output matrix
-num_mel_bins= 32
-sampling_rate= 16000 
-lower_edge_hertz = 400            # Quality no effect on Excution time
-upper_edge_hertz = 2700          ####### Note : upper should be < sampleRate/2 
-'''
-Compute_SNR(Inputfoldername,OutputFolderName,length= 0.016,stride=0.008,MFCC= 10,num_mel_bins=32,sampling_rate= 16000,lower_edge_hertz=400,upper_edge_hertz=2700 , debug = debug)
+    # print(f"Excute {operation}")
+    ########################################################## Change_frequency_edge_hertz to recver from the dropping in quality due to reducing num num_mel_bins to 32
+    
+    if operation == "frequency_edge" :
+        print(f"excuting frequency_edge")
+        Change_frequency_edge_hertz(Inputfoldername = Inputfoldername ,OutputFolderName = OutputFolderName , debug= debug )
+   
+    '''
+    length= 0.016
+    stride = 0.008
+    MFCC= 10                       ###### Remember this changes the shape of the final output matrix
+    num_mel_bins= 32
+    sampling_rate= 16000 
+    lower_edge_hertz = 400            # Quality no effect on Excution time
+    upper_edge_hertz = 2700          ####### Note : upper should be < sampleRate/2 
+    '''
+    if operation == "computeSNR" :
+        Compute_SNR(Inputfoldername,OutputFolderName,length= 0.016,stride=0.008,MFCC= 10,num_mel_bins=32,sampling_rate= 16000,lower_edge_hertz=400,upper_edge_hertz=2700 , debug = debug)
+if __name__ == '__main__':
+    main()
