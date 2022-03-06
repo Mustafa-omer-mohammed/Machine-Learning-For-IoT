@@ -104,10 +104,9 @@ def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_me
     start = time.time()
       
     tf_audio, rate = tf.audio.decode_wav(audio)
-    # decode to tf tensor it's a design choice but it's better optimized  , audio is raw data not array we need to take just the tf_audio, rate  not the other meta data 
-    #print(f'Rate: {rate.numpy()}')
-    tf_audio = tf.squeeze(tf_audio, 1)# just changing the shape by adding  dimension which doesn't change the content but just to be coherent with the stft requirment for predefined shape of tensor
-    # because it needs also the number of channels = number of used microphones in our case it's only = 1 
+    # decode to tf tensor it's a design choice but it's better optimized by TensorFlow.
+    tf_audio = tf.squeeze(tf_audio, 1)
+    #  needs also the number of Input channels = number of used microphones in our case it's only = 1 
     # Remember : f.signal.stft takes frame_length, frame_step as Number of samples Not as in seconds so we need to apply the following 
     frame_length = int(length * rate.numpy())   # (args.length [in seconds] * rate.numpy() [in Hz 1/s]) = sec*1/s => Number of samples
     frame_step = int(stride * rate.numpy())     # (args.Stride [in seconds] * rate.numpy() [in Hz 1/s]) = sec*1/s => Number of samples
@@ -115,8 +114,7 @@ def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_me
     #print('Frame step:', frame_step)
     stft = tf.signal.stft(tf_audio, frame_length ,  frame_step , fft_length=frame_length)
 
-    #print('Execution Time: {:.4f}s'.format(end-start))
-    spectrogram = tf.abs(stft)                         # because the output is a complex number and we are only interested in the magnitude (the real part) we should apply absolute |stft|
+    spectrogram = tf.abs(stft)                         #  the output is a complex number and we are only interested in the magnitude (the real part) we should apply absolute |stft|
     # print('Spectrogram shape:', spectrogram)    # Spectogram is 2D tensor Time vs Frequency 
     del stft
 
@@ -124,9 +122,9 @@ def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_me
         linear_to_mel_weight_matrix_s = tf.signal.linear_to_mel_weight_matrix(num_mel_bins, spectrogram.shape[-1], sampling_rate, 20, 4000)  
     else :
         linear_to_mel_weight_matrix_s = linear_to_mel_weight_matrix
-    # print('linear shape:', linear_to_mel_weight_matrix)
+    # print('linear matrix shape:', linear_to_mel_weight_matrix)
     mel_spectrogram = tf.tensordot(spectrogram, linear_to_mel_weight_matrix_s, 1)          # this depends on the input audio file
-    # print('this:', mel_spectrogram)
+
 
     mel_spectrogram.set_shape(spectrogram.shape[:-1].concatenate(linear_to_mel_weight_matrix_s.shape[-1:]))
 ###############
@@ -157,7 +155,8 @@ def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_me
 
     return mfccs_slow, execution_time , linear_to_mel_weight_matrix_s , mfccs_slow_shape
 
-#################################################################      End of slow function
+
+#################################################################      here
 
 #####################################################            MFCC_FAST          ###########################################################################
 def MFCC_FAST(Inputfoldername, filename, OutputFolderName, length, stride , MFCC, num_mel_bins, sampling_rate , lower_edge_hertz, upper_edge_hertz , debug, linear_to_mel_weight_matrix = None , compute = False) :
