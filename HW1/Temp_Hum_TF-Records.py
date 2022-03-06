@@ -38,7 +38,61 @@ try:
 except FileNotFoundError:
     print(f"Input file '{filename}' does not exist. Shutting down...")
     sys.exit()
+############################################################### Utilization Fuctions ################################################################################
+# Define a function to apply Normalization if needed 
+def normalize(df):
+    t_max = 50
+    t_min = 0
+    h_max = 90
+    h_min = 20
+    df['temp'] = (df['temp']-t_min)/(t_max-t_min)
+    df['hum'] = (df['hum']-h_min)/(h_max-h_min)
+    
+    return df
+# Read time as posix_time and convert to int 
+def posix_time (timestamp):
+	ts = datetime.datetime.strptime(timestamp, '%d/%m/%Y,%H:%M:%S')
+	posix_ts = int(time.mktime(ts.timetuple()))
 
+	return posix_ts
+
+# Fucntion to get the size of file before and after conversion 
+def getSize(filename):
+    st = os.stat(filename)
+    return st.st_size
+############### tf examples conversion function ######################   
+def _bytes_feature(value):
+  if isinstance(value, type(tf.constant(0))):
+    value = value.numpy() # BytesList won't unpack a string from an EagerTensor.
+  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+def _float_feature(value):
+  return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+
+def _int64_feature(value):
+
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+############################################################### Write to TF Records Fuctions ################################################################################
+
+
+if(normalization == True):
+	#changing the name of the output file for the normalization
+	filename_OUT= filename_OUT + "_Normalized"
+	df = normalize(df)
+
+#DateTime preprocessing --> create another column with the data and time concat
+# map time to posix time
+df['timestamp'] = df['date'] +","+df['time']
+df['posix_ts'] = df['timestamp'].map(lambda t : posix_time(t))
+
+
+Date_Time = df['posix_ts']
+Temp = df['temp']
+Humid = df['hum']
+
+
+
+########################################## here 
 with tf.io.TFRecordWriter(filename_OUT) as writer:
 
 	if normalization==True:
