@@ -4,9 +4,9 @@ import numpy as np
 import time, datetime
 import argparse
 import os
+import sys
 
-
-#Calculate the normalization
+# Sensor DHT11 Maximum and Minimum Temp,Hum values ==> used for normalization 
 Temp_MAX=50
 Temp_MIN=0
 Hum_Max=90
@@ -19,49 +19,25 @@ Hum_Min=20
 parser=argparse.ArgumentParser()
 
 parser.add_argument('--normalize', default=False, action= 'store_true', help='normalization False/True')
-parser.add_argument('--output', type=str, help='output filename')
-parser.add_argument('--input', type= str, help= 'input filename')
+parser.add_argument('--output', type=str, required=True,help='output filename')
+parser.add_argument('--input', type= str,default='input', help= 'input filename')
 
 args = parser.parse_args()
 
 #parser info
-filename=f"./{args.input}"
-filename_OUT=f"./{args.output}"
-normalization=args.normalize
+filename=f"{args.input}.csv"          ##### input file name 
+filename_OUT= args.output             ##### output file name 
+normalization = args.normalize        ##### Normalization Flag (if True apply Normalization)
 
 
 print(f"Normalization: {normalization}")
 
 #this is reading the filename that contains the info
-data=pd.read_csv(filename, index_col=0)
-
-#DateTime preprocessing --> create another collumn with the data and time concat
-data["DateTime"]= data.Date + ' ' + data.Time 
-data["DateTime"]=pd.to_datetime(data["DateTime"])
-
-#Overwriting the information concatenated on DateTime with the values according to posix
-date_time_posix=data.DateTime
-data["DateTime"]=date_time_posix.apply(lambda x: time.mktime(x.timetuple())) 	#float
-
-#print(data.info())
-print("The correct info from the file")
-print(data.head())
-
-
-Temp=data.Temperature.astype("uint8")
-Humid=data.Humidity.astype("uint8")
-Date_Time=data.DateTime
-
-
-if normalization==True:
-	
-	#changing the name of the output file for the normalization
-	filename_OUT= filename_OUT + "Normalized"
-	print(filename_OUT)
-
-
-
-
+try:
+    df = pd.read_csv(filename, header=None, names=['date', 'time', 'temp', 'hum'])
+except FileNotFoundError:
+    print(f"Input file '{filename}' does not exist. Shutting down...")
+    sys.exit()
 
 with tf.io.TFRecordWriter(filename_OUT) as writer:
 
