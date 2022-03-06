@@ -63,7 +63,24 @@ def Compute_SNR(Inputfoldername, OutputFolderName, length, stride , MFCC, num_me
         Average_Execution_FAST=(Total_Execution_FAST/i)*1000
         Average_SNR=Total_SNR/i 
     
+#####################################################           Printing the Results          ###########################################################################
+    # print the shape of  the matrix mfccs_slow_shape  
+    if Average_Execution_FAST <= 18.5 :                            ############ we set the constraint of excution time 
+        print(f'the shape of  the matrix mfccs_slow_shape :{mfccs_slow_shape} ')  
+        # print the shape of  the matrix mfccs_fast_shape  
+        print(f'the shape of  the matrix mfccs_fast_shape :{mfccs_fast_shape} ') 
+        
+        # Relative time excution reducton by the fast pipline with respect to slow    
+        print(f'The fast pipeline has :{100*(Average_Execution_SLOW - Average_Execution_FAST)/Average_Execution_SLOW :0.2f} % lower execution time compared to slow pipeline')
+        #Average time of SLOW
+        print(f'Average time of SLOW:{Average_Execution_SLOW} ms')
+        #Average time of FAST
+        print(f'Average time of FAST:{Average_Execution_FAST} ms')
+        #Average value of the SNR
+        print(f'Average value of the SNR:{Average_SNR} dB')
 
+
+    return Average_SNR, Average_Execution_FAST, Average_Execution_SLOW
 #####################################################            MFCC_SLOW          ###########################################################################
 
 def MFCC_SLOW (Inputfoldername, filename, OutputFolderName , debug, linear_to_mel_weight_matrix = None , compute = False ) :
