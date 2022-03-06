@@ -92,61 +92,39 @@ Humid = df['hum']
 
 
 
-########################################## here 
 with tf.io.TFRecordWriter(filename_OUT) as writer:
 
-	if normalization==True:
-		#Values according to normalization
-		data["Temperature"] = (data["Temperature"] - Temp_MIN) / (Temp_MAX - Temp_MIN)
-		data["Humidity"]    = (data["Humidity"] - Hum_Min) / (Hum_Max - Hum_Min)
+	for i in range(len(df)):
 		
-		Temp=data.Temperature
-		Humid=data.Humidity
-		
-		print("Norm done")
-		print(data.head())
-		
-		for i in range(len(data)):
-		
-			Date_time = tf.train.Feature(float_list=tf.train.FloatList(value=[Date_Time[i]]))
-			#print(Date_time)
-			Temperature= tf.train.Feature(float_list=tf.train.FloatList(value=[Temp[i]]))	
-			#print(Temperature)
-			Humidity =tf.train.Feature(float_list=tf.train.FloatList(value=[Humid[i]]))
-			#The condition of normalization is done			
-			mapping = {'Date_time': Date_time,
-				'Temperature' : Temperature,
-				'Humidity' : Humidity}
-						
-			example = tf.train.Example(features=tf.train.Features(feature=mapping))
-			#print(example)	
-			print("Normalization was executed")
-			writer.write(example.SerializeToString())
-			print(example)		
-			
-			
-	else:	#For no normalization
-		for i in range(len(data)):
-			print("With no norm")
-			Date_time = tf.train.Feature(float_list=tf.train.FloatList(value=[Date_Time[i]]))
-			#print(Date_time)
-			Temperature= tf.train.Feature(int64_list=tf.train.Int64List(value=[Temp[i]]))	
-			#print(Temperature)
-			Humidity =tf.train.Feature(int64_list=tf.train.Int64List(value=[Humid[i]]))
-	
-			
-			#The condition of normalization is done			
-			mapping = {'Date_time': Date_time,
-				'Temperature' : Temperature,
-				'Humidity' : Humidity}
-						
-			example = tf.train.Example(features=tf.train.Features(feature=mapping))
-			#print(example)	
-			print("Last one")
-			writer.write(example.SerializeToString())
-			print(example)		
-			
+		if normalization==True:    ####### if normalize ==> apply normalization to the Temperature and Humidity input values 
 
+			mapping = {'Date_time': _int64_feature(Date_Time[i]),
+					   'Temperature' : _float_feature(Temp[i]),
+				       'Humidity' : _float_feature(Humid[i])}
+						
+			example = tf.train.Example(features=tf.train.Features(feature=mapping))
+
+			writer.write(example.SerializeToString())	
+			# print(example)	
+			
+		else:	#  normalization will not be applied
+			
+			mapping = {'Date_time': _int64_feature(Date_Time[i]),
+					   'Temperature' : _int64_feature(Temp[i]),
+					   'Humidity' : _int64_feature(Humid[i])}
+						
+						
+			example = tf.train.Example(features=tf.train.Features(feature=mapping))
+
+			writer.write(example.SerializeToString())
+	
+			# print(example)
+
+
+############################################################### Read from TF Records  Fuctions ################################################################################
+# please uncomment to check the output can be read as expected 
+
+'''
 dataset = tf.data.TFRecordDataset(filename_OUT )#buffer_size=100)
 print(dataset)
 
@@ -155,37 +133,49 @@ print(dataset)
 
 #Normalized
 def decode_fn_N(example):
-	print("!!!!!!!!!!!!!!!!!!!!!!!!!!!Normalized in the if")
+	#print("!!!!!!!!!!!!!!!!!!!!!!!!!!!Normalized in the if")
 	return tf.io.parse_single_example(
 	      # Data
 	      example,
 
 	      # Schema
-	      {"Date_time": tf.io.FixedLenFeature([], dtype=tf.float32),
-	       "Temperature": tf.io.FixedLenFeature([], dtype=tf.float32),
-	       "Humidity": tf.io.FixedLenFeature([], dtype=tf.float32)}
+	      {"Date_time": tf.io.FixedLenFeature([], dtype=tf.int64,),
+	       "Temperature": tf.io.FixedLenFeature([], dtype=tf.float32,),
+	       "Humidity": tf.io.FixedLenFeature([], dtype=tf.float32,)}
 	  )
 	  
 #Not normalized	  
-def   decode_fn(example):
+def  decode_fn(example):
 	return tf.io.parse_single_example(
 	# Data
 	example,
 
 	# Schema
-	{"Date_time": tf.io.FixedLenFeature([], dtype=tf.float32),
-	"Temperature": tf.io.FixedLenFeature([], dtype=tf.int64),
-	"Humidity": tf.io.FixedLenFeature([], dtype=tf.int64)}
+	{"Date_time": tf.io.FixedLenFeature([], dtype=tf.int64,),
+	"Temperature": tf.io.FixedLenFeature([], dtype=tf.int64,),
+	"Humidity": tf.io.FixedLenFeature([], dtype=tf.int64,)}
 	)
 
-if len(filename_OUT)==len("./"+args.output):
-	#Not normalized
 
+
+if len(filename_OUT)==len(args.output):
+	#Not normalized
 	for batch in tf.data.TFRecordDataset([filename_OUT]).map(decode_fn):
 		#print(batch)
-		print("Date_time = {Date_time:.2f},  Temperature = {Temperature:.2f}, Humidity = {Humidity:.2f}".format(**batch))
+		
+		print("Date_time = {Date_time},  Temperature = {Temperature}, Humidity = {Humidity}".format(**batch))
+						
+		
 else: 
 	
 	for batch in tf.data.TFRecordDataset([filename_OUT]).map(decode_fn_N):
 		#print(batch)
-		print("Date_time = {Date_time:.2f},  Temperature = {Temperature:.2f}, Humidity = {Humidity:.2f}".format(**batch))
+		print("Date_time = {Date_time},  Temperature = {Temperature:.2f}, Humidity = {Humidity:.2f}".format(**batch))
+		#print(f"Size of the {filename_OUT} is {size.st_size}")
+'''	
+
+
+
+print(f"Size of the {filename_OUT}.Tfrecord is {getSize(filename_OUT)} B ")
+		
+print(f"Size of the {filename}.csv is {getSize(filename)} B")
