@@ -235,8 +235,8 @@ def SNR(slow,fast):
     snr = 20 * np.log10(Norm_slow / denom)
     return snr 
 
-########################################################### This Function is for Parameter Tuning ONly ###########################################################
-'''
+########################################################### This Function is for Parameter Tuning only  ###########################################################
+
 def Change_frequency_edge_hertz (Inputfoldername , OutputFolderName , debug) :
     Inputfoldername = Inputfoldername
     OutputFolderName= OutputFolderName
@@ -248,11 +248,8 @@ def Change_frequency_edge_hertz (Inputfoldername , OutputFolderName , debug) :
     sampling_rate= 16000
     lower_edge_hertz = np.arange(10,101,10) # Quality no effect on Excution time
     upper_edge_hertz = np.arange(200,4000,200)         ####### Remember upper should be < sampleRate/2 
-
  #####################################################################################################
-
-    data={'lower_edge_hertz [Hz]':[], 'upper_edge_hertz [Hz]':[],  'Average_Execution_SLOW [ms]':[],'Average_Execution_FAST [ms]':[],'Average_SNR [db]':[] }
-
+    data = {'lower_edge_hertz [Hz]':[], 'upper_edge_hertz [Hz]':[],  'Average_Execution_SLOW [ms]':[],'Average_Execution_FAST [ms]':[],'Average_SNR [db]':[] }
     for lower , upper in list(itertools.product(lower_edge_hertz, upper_edge_hertz)):
         print(f" compute for combination ({lower} , {upper}) ")
         lower_edge_hertz = lower
@@ -260,16 +257,16 @@ def Change_frequency_edge_hertz (Inputfoldername , OutputFolderName , debug) :
         Average_SNR,Average_Execution_FAST,Average_Execution_SLOW = Compute_SNR(Inputfoldername, OutputFolderName, length, stride , MFCC,num_mel_bins,  sampling_rate,lower_edge_hertz, upper_edge_hertz , debug)
         
         if Average_Execution_FAST <= 18 :
-		data['lower_edge_hertz [Hz]'].append(lower_edge_hertz)
-		data['upper_edge_hertz [Hz]'].append(upper_edge_hertz)
-		data['Average_Execution_SLOW [ms]'].append(Average_Execution_SLOW)
-		data['Average_Execution_FAST [ms]'].append(Average_Execution_FAST)
-		data['Average_SNR [db]'].append(Average_SNR)
-		
+            data['lower_edge_hertz [Hz]'].append(lower_edge_hertz)
+            data['upper_edge_hertz [Hz]'].append(upper_edge_hertz)
+            data['Average_Execution_SLOW [ms]'].append(Average_Execution_SLOW)
+            data['Average_Execution_FAST [ms]'].append(Average_Execution_FAST)
+            data['Average_SNR [db]'].append(Average_SNR)
+        
         print('#' * 100)  
-
     print(data) #####################################################################################################
-'''
+
+# here
 ########################################################################### main function ###########################################################################
 
 
