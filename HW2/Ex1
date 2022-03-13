@@ -1,20 +1,17 @@
-############################################################################ Importing Liberaries ############################################################################
 import argparse
 import numpy as np
 import os
 import pandas as pd
 import tensorflow as tf
-
+import tensorflow.lite as tflite
 from tensorflow import keras
+import zlib
+from platform import python_version
+import tensorflow_model_optimization as tfmot   
+
+print(f"Python version used to excute the code is {python_version()}")
 
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--version', type=int, required=True, help='version --> can be ["a" , "b"]')
-# args = parser.parse_args()
-
-seed = 42
-tf.random.set_seed(seed)
-np.random.seed(seed)
 
 zip_path = tf.keras.utils.get_file(
     origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
@@ -35,20 +32,8 @@ test_data = data[int(n*0.9):]
 
 mean = train_data.mean(axis=0)
 std = train_data.std(axis=0)
-
-
-print (mean.shape)
-
-# WindowGenerator
-
-input_width = 6
-version = args.version                   
-if version == "a" :               
-    output_steps = 3
-if version == "b" :
-    output_steps = 9
-
-############################################################################ Create the WindowGenerator Class #######################################################
+    
+######################################################### Creating the WindowGenerator Class #########################################################
 
 class WindowGenerator:
     def __init__(self, input_width, output_steps, mean, std):
@@ -67,139 +52,34 @@ class WindowGenerator:
 
         return inputs, labels
 
-    def normalize(self, features):
+    def normalize(self, features):                         # apply normalization
         features = (features - self.mean) / (self.std + 1.e-6)
 
         return features
 
-    def preprocess(self, features):
+    def preprocess(self, features):                         # preprocessing pipleline 
         inputs, labels = self.split_window(features)
         inputs = self.normalize(inputs)
 
         return inputs, labels
 
-    def make_dataset(self, data, train):
+    def make_dataset(self, data, train):                    # make tensorflow data set of timeseries  
         ds = tf.keras.preprocessing.timeseries_dataset_from_array(
                 data=data,
                 targets=None,
-                sequence_length = input_width + self.output_steps,                       #### this change because now the total depends on the output widht
-                sequence_stride = 1,
+                sequence_length = input_width + self.output_steps,                       #### the length of the window is dependant on both the input & output widht
+                sequence_stride = 1,                                                     # silde the window by one in each iteration 
                 batch_size = 32)
         ds = ds.map(self.preprocess)
-        ds = ds.cache()
+        ds = ds.cache()                                                           # useful to avoid repeating the preprocessing functions everytime (speed up the pipeline)
         if train is True:
-            ds = ds.shuffle(100, reshuffle_each_iteration=True)
+            ds = ds.shuffle(100, reshuffle_each_iteration=True)                   # we will shuffle the data before training 
 
         return ds
 
-############################################################################ Create datasets ############################################################################
+
 
 generator = WindowGenerator(input_width, output_steps, mean, std)
 train_ds = generator.make_dataset(train_data, True)
 val_ds = generator.make_dataset(val_data, False)
 test_ds = generator.make_dataset(test_data, False)
-
-############################################################################ checking the shapes ############################################################################
-
-print(f"data shape before split {data.shape}")
-
-print(f"train_data {train_data.shape}")
-
-print(f"val_data {val_data.shape}")
-
-print(f"test_data {test_data.shape}")
-
-
-
-it = iter(train_ds)
-
-
-inp , label = next(it)
-print(inp.shape)
-print(label.shape)
-
-
-############################################################################ Ex 1.7 MultiOutputMAE Metric ############################################################################
-class MultiOutputMAE(tf.keras.metrics.Metric):
-    def __init__(self, name='mean_absolute_error', **kwargs):
-        super().__init__(name=name, **kwargs)
-        self.total = self.add_weight('total', initializer='zeros', shape=(2,))
-        self.count = self.add_weight('count', initializer='zeros')
-
-    def update_state(self, y_true, y_pred, sample_weight=None):
-        error = tf.abs(y_pred- y_true)     # change here y_pred.reshape(y_true.shape)
-        error = tf.reduce_mean(error, axis=[0,1])
-        self.total.assign_add(error)
-        self.count.assign_add(1.)
-
-        return
-
-    def reset_states(self):
-        self.count.assign(tf.zeros_like(self.count))
-        self.total.assign(tf.zeros_like(self.total))
-
-    def result(self):
-        result = tf.math.divide_no_nan(self.total, self.count)
-
-        return result
-
-
-
-############################################################################ building the models ############################################################################
-
-# Exercise 1.3
-mlp = tf.keras.Sequential([
-        tf.keras.layers.Flatten(input_shape = (input_width,2) , name='Flatten'),
-        tf.keras.layers.Dense(128, activation='relu' , name='Dense1'),
-        tf.keras.layers.Dense(128, activation='relu' , name='Dense2'),
-        tf.keras.layers.Dense(units = 2*output_steps , name='Output_layes'), 
-        tf.keras.layers.Reshape([output_steps, 2])
-    ])
-
-############################################################################
-cnn = tf.keras.Sequential([
-        tf.keras.layers.Conv1D(input_shape = (input_width,2) , filters=64, kernel_size=3, activation='relu'),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(units=64, activation='relu'),
-        tf.keras.layers.Dense(units=2*output_steps), 
-        tf.keras.layers.Reshape([output_steps, 2])
-    ])
-
-############################################################################
-
-lstm = tf.keras.Sequential([
-        tf.keras.layers.LSTM(input_shape = (input_width,2) ,units=64),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(units=2*output_steps),
-        tf.keras.layers.Reshape([output_steps, 2]), 
-    ])
-############################################################################ initiate model instance  ############################################################################
-MODELS = {'mlp': mlp, 'cnn': cnn, 'lstm': lstm}
-model = MODELS['lstm']  #
-
-# ! pip install pydot
-# ! pip install pydotplus
-# ! pip install graphviz
-# print(model.summary())
-
-import pydot
-tf.keras.utils.plot_model(model, to_file='model.png',show_layer_names=True , show_shapes = True)
-
-############################################################################ Define losses & Optimizer & metrics ############################################################################
-
-loss =   tf.keras.losses.MeanSquaredError()                       #tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam()
-metrics = [MultiOutputMAE()]
-
-############################################################################ Training and optimizing ############################################################################
-
-model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
-
-tb_run = 0
-tb_callback = keras.callbacks.TensorBoard(log_dir='./tb_log/run_{}'.format(tb_run), histogram_freq=1)
-#history = model.fit(inp_train,target_train,  epochs=5,validation_data=val_ds ,batch_size=len(batch_train), callbacks=[tb_callback])
-model.fit(train_ds, epochs=20,   validation_data=val_ds,callbacks=[tb_callback])
-tb_run += 1
-
-print(model.summary())
-
