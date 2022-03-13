@@ -248,3 +248,79 @@ def apply_Quantization(tflite_model_dir =  TFLITE ,  PQT = False , WAPQT = False
 def representative_dataset_gen():
     for x, _ in train_ds.take(1000):
         yield [x]
+
+######################################################### get the size of tf_lite model #########################################################
+def getsize(file):
+    st = os.stat(file)
+    size = st.st_size
+    return size
+
+
+######################################################### Function to load and evaluate  TF lite model #########################################################
+# Note : this function can be ( should be ) executed on the edge device (Raspberrypi in our case)  but since we are not measuring latency the accuracy should not be affected 
+def load_and_evaluation(path, dataset , Compressed) :
+    interpreter = tf.lite.Interpreter(model_path = path) 
+    interpreter.allocate_tensors()
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    dataset = test_ds.unbatch().batch(1)
+
+    outputs = []
+    labels = []
+    print(dataset)
+
+    for data in dataset:
+        my_input = np.array(data[0], dtype = np.float32)
+        label = np.array(data[1], dtype = np.float32)
+        # print (f"my_input = {my_input}")
+        # print(f"label = {label}")
+
+    
+            
+        labels.append(label)
+
+        interpreter.set_tensor(input_details[0]['index'], my_input)
+        interpreter.invoke()
+        my_output = interpreter.get_tensor(output_details[0]['index'])
+        
+        outputs.append(my_output[0])
+
+    outputs = np.squeeze( np.array(outputs))
+    labels = np.squeeze(np.array(labels))
+
+    
+    error = np.absolute(outputs - labels)
+  
+    mean_axis_1 = np.mean(error , axis = 1)     #  ==>  np.sum(error, axis = 1)/labels.shape[1]
+    
+    mae = np.mean(mean_axis_1 , axis = 0)  #  ==> np.sum(mean_axis_1, axis = 0) /mean_axis_1.shape[0]
+    temp_MAE = mae[0] 
+    hum_MAE = mae[1]
+
+    # Evaluate the size of Tflite model 
+    size = getsize(path)
+    # Evaluate the size of Tflite model  after Comperession 
+    size_compressed = getsize(Compressed)
+
+    print("*"*50,"\n",f" Excuting the model {path} ")
+    print("*"*50,"\n",f'Temp mae = {mae[0]:.3f}: , HUM mae = {mae[1]:.3f} ')
+    print ("*"*50,"\n",f"The Size of TF lite model  Before compression is = {size /1000 } kb" )
+    print ("*"*50,"\n",f"The Size of TF lite model  After compression is = {size_compressed /1000 } kb" )
+    
+    
+    
+    # check version "a" requirment
+    if version == "a" :
+        if temp_MAE <= 0.3 and hum_MAE <= 1.2 :
+            print ("*"*50,"\n","achieved the requirments " )
+        else :
+            print ("*"*50,"\n","Not achieved the requirments" )
+    # check version "b" requirment        
+    if version == "b" :
+        if temp_MAE <= 0.7 and hum_MAE <= 2.5 :
+            print ("*"*50,"\n","achieved the requirments " )
+        else :
+            print ("*"*50,"\n","Not achieved the requirments" ) 
+
+#     return mae 
