@@ -108,3 +108,59 @@ class MultiOutputMAE(tf.keras.metrics.Metric):
         result = tf.math.divide_no_nan(self.total, self.count)
 
         return result
+######################################################### Parameters to change :
+
+alpha = 0.03           # the width multiplier 
+
+
+model_version = f"_V_{version}_alpha={alpha} )"
+
+mymodel = 'mlp'+ model_version                                  # change the model used ['mlp' , 'cnn']
+chk_path = f'./callback_{mymodel}_chkp/{mymodel}_chkp_best'     # path for saving the best model 
+TFLITE = f'Group26_th_{version}.tflite'                                    # path for saving the best model after converted to TF.lite model 
+
+#################################### Build models with Structured Pruning via width Multiplier #####################################################
+def bulid_models_Structured (alpha = alpha , version = version , input_width = input_width ,output_steps = output_steps ,model_version = model_version  ) :
+    mlp = tf.keras.Sequential([
+            tf.keras.layers.Flatten(input_shape = (input_width,2) , name='Flatten'),
+            tf.keras.layers.Dense(int(128 *alpha), activation='relu' , name='Dense1'),
+            tf.keras.layers.Dense(int(128 *alpha), activation='relu' , name='Dense2'),
+            tf.keras.layers.Dense(units = 2*output_steps , name='Output_layes'), 
+            tf.keras.layers.Reshape([output_steps, 2])
+        ])
+
+    ############################################################################
+    cnn = tf.keras.Sequential([
+            tf.keras.layers.Conv1D(input_shape = (input_width,2) , filters=int(64 *alpha), kernel_size=3, activation='relu'),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(units=int(64 *alpha), activation='relu'),
+            tf.keras.layers.Dense(units=2*output_steps), 
+            tf.keras.layers.Reshape([output_steps, 2])
+        ])
+
+  
+
+    MODELS = {'mlp'+ model_version: mlp, 'cnn'+ model_version: cnn }
+    return MODELS 
+
+
+ 
+
+
+MODELS = bulid_models_Structured()
+
+
+######################################################### Define losses & Optimizer & metrics #########################################################
+
+######################################################### Function to initiate and compile the model #########################################################
+def get_model(model = mymodel ):
+    model = MODELS[model]
+    loss =   tf.keras.losses.MeanSquaredError()                       #tf.keras.losses.MeanSquaredError()
+    optimizer = tf.keras.optimizers.Adam()
+    metrics = [MultiOutputMAE()]
+
+    # Training and optimizing
+
+    model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
+    
+    return model
