@@ -1,1 +1,32 @@
-the ain of this exercise is 
+# The aim of this exercise is to demonistrate how Nueral Networks Modles are often over_designed, which leads to over-fitting and waste of memory and energy and increase latency. 
+By using TensorFlow light model optimization techniques we managed to :  
+1- reduce the model size and model parameters (weights and activations) ==> reduce the memory occupation ==> Using Pruning techniques
+2- reduce the the parameter's precision ==> reduce memory consumbtion ( RAM ) and memory access time ==> using quantization techniques 
+3- reduce latency and energy consumbtion ==> both techniques helps in reducing both latency and energy consumbtion  as mentioned in the report attached 
+
+# Requirments to run the code :
+1- python version 3.81
+2- Numpy 
+3- Pandas
+4- TensorFlow 2.0
+5- Keras 
+6- tensorflow_model_optimization
+
+# input parameters :
+EX-1 :
+depending on the time series window size we created 2 versions controlled by the input parameter 'Version' where : Version a ==> #Output Steps = 3 , Version b ==> #Output Steps = 9
+
+EX-2 :
+depending on the requirments to be met different versions of pipelines have been designed using different model optimization techniques, different NN model architectures controlled 
+by the input parameter 'Version' where it can be either : [A,B,C] 
+
+# Data sets :
+EX-1 :
+We used 'jena_climate_2009_2016' data set where the target variables are 'Temperature' , 'Humidity'. The data set can either be downloaded from the following link
+'https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip', or automatically been downloaded when running the code
+
+EX-2:
+We used the 'mini_speech_commands' data set with 8 class labels ['stop', 'up', 'yes', 'right', 'left', 'no',  'down', 'go'] to be predicted. The data set can either be downloaded from the following link
+"http://storage.googleapis.com/download.tensorflow.org/data/mini_speech_commands.zip", or automatically been downloaded when running the code
+
+
