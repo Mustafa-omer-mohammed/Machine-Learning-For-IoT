@@ -194,3 +194,25 @@ model = get_model(mymodel)
 history = model.fit(train_ds, epochs=30,   validation_data=val_ds,callbacks=[mycallback ,cp_callback ])
 ######################################################### Print Model Summary #########################################################
 print(model.summary())
+
+######################################################### Function to Evaluate the best Model and Convert to Tf lite  #########################################################
+def S_pruning_Model_evaluate_and_compress_to_TFlite( tflite_model_dir =  TFLITE , chk_path = chk_path , model_name = mymodel):
+    if not os.path.exists('./models'):
+        os.makedirs('./models')
+    model = tf.keras.models.load_model(filepath = chk_path , custom_objects={'MultiOutputMAE':MultiOutputMAE})
+
+    run_model = tf.function(lambda x: model(x))
+    # input_shape = model.inputs[0].shape.as_list()
+    # input_shape[0] = batch_size
+    # func = tf.function(model).get_concrete_function(
+    # tf.TensorSpec(input_shape, model.inputs[0].dtype))
+    concrete_func = run_model.get_concrete_function(tf.TensorSpec([1, 6, 2], tf.float32))
+    saving_path = os.path.join('.','models', model_name)
+    model.save(saving_path ,signatures=concrete_func )
+
+    best_model = tf.keras.models.load_model(filepath = saving_path , custom_objects={'MultiOutputMAE':MultiOutputMAE})
+    loss, error = best_model.evaluate(test_ds)
+    print( "*" *50,"\n",f'Evaluating best model before convertion to TF lite ')
+    print( "*" *50,"\n",f'Temp mae = {error[0]:.3f}: , HUM mae = {error[1]:.3f} ')
+
+    return saving_path
