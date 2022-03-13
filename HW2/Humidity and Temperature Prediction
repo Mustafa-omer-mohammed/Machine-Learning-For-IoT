@@ -188,3 +188,9 @@ cp_callback = keras.callbacks.ModelCheckpoint(
     save_weights_only=False,
     mode='auto',
     save_freq='epoch')
+    
+######################################################### Train with Structured Pruning #########################################################
+model = get_model(mymodel)
+history = model.fit(train_ds, epochs=30,   validation_data=val_ds,callbacks=[mycallback ,cp_callback ])
+######################################################### Print Model Summary #########################################################
+print(model.summary())
