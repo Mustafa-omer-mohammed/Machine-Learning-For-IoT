@@ -164,3 +164,27 @@ def get_model(model = mymodel ):
     model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
     
     return model
+######################################################### define call backs  #########################################################
+
+############## Create custom call-back TEMP_HUM_VAL  callback to print the MAE for Temperature and humidity in a more interpretable format during the training.
+class TEMP_HUM_VAL(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs):
+        hum = logs["val_mean_absolute_error"][1]
+        temp = logs["val_mean_absolute_error"][0]
+        MAE = logs["val_mean_absolute_error"]
+        print(f"\n Temp MAE = {temp:.3f}, Hum MAE = {hum:.3f}    ")
+        # return temp , hum
+
+
+mycallback = TEMP_HUM_VAL()
+
+############## Create checkpoint callback to save the best model 
+cp_callback = keras.callbacks.ModelCheckpoint(
+    f'./callback_{mymodel}_chkp/{mymodel}_chkp_best',
+    # './callback_test_chkp/chkp_best',
+    monitor='val_loss',
+    verbose=0, 
+    save_best_only=True,
+    save_weights_only=False,
+    mode='auto',
+    save_freq='epoch')
