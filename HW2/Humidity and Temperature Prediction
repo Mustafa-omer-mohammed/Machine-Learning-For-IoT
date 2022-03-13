@@ -244,3 +244,7 @@ def apply_Quantization(tflite_model_dir =  TFLITE ,  PQT = False , WAPQT = False
         fp.write(tflite_compressed)
     print("*" *50,"\n",f"the Quantized TF lite model is saved successfuly to {tflite_model_dir}")
     return Compressed , tflite_model_dir 
+######################################################### Function for weight and activations quantization to create Representative data #########################################################
+def representative_dataset_gen():
+    for x, _ in train_ds.take(1000):
+        yield [x]
