@@ -11,7 +11,14 @@ import tensorflow_model_optimization as tfmot
 
 print(f"Python version used to excute the code is {python_version()}")
 
+######################################################## Input Parameters #########################################################
+parser = argparse.ArgumentParser()
+parser.add_argument('--version', type=str, required=True, help='Version a ==> #Output Steps = 3 , b ==> #Output Steps = 9 ')
+args = parser.parse_args()
 
+seed = 42
+tf.random.set_seed(seed)
+np.random.seed(seed)
 
 zip_path = tf.keras.utils.get_file(
     origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
@@ -32,7 +39,13 @@ test_data = data[int(n*0.9):]
 
 mean = train_data.mean(axis=0)
 std = train_data.std(axis=0)
-    
+
+input_width = 6
+version = args.version                   
+if version == "a" :              
+    output_steps = 3
+if version == "b" :
+    output_steps = 9
 ######################################################### Creating the WindowGenerator Class #########################################################
 
 class WindowGenerator:
@@ -324,3 +337,22 @@ def load_and_evaluation(path, dataset , Compressed) :
             print ("*"*50,"\n","Not achieved the requirments" ) 
 
 #     return mae 
+######################################################### Evaluate models Without Quantization #########################################################
+
+
+saving_path  = S_pruning_Model_evaluate_and_compress_to_TFlite(TFLITE)
+
+
+# load_and_evaluation(tf_lite_model_path , test_ds , tflite_model_dir_Compressed) 
+
+######################################################### Evaluate models With Weights only Quantization ######################################################### 
+
+W_Compressed , W_Quantized   = apply_Quantization(PQT=True ,  saving_path=saving_path)
+
+load_and_evaluation(W_Quantized , test_ds , W_Compressed) 
+
+######################################################### Evaluate models With Weights + activations  Quantization  ######################################################### 
+
+# WA_Compressed , WA_Quantized   = apply_Quantization(WAPQT=True , saving_path=chk_path)
+
+# load_and_evaluation(WA_Quantized , test_ds , WA_Compressed) 
