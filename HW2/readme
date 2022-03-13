@@ -27,6 +27,6 @@ We used 'jena_climate_2009_2016' data set where the target variables are 'Temper
 
 EX-2:
 We used the 'mini_speech_commands' data set with 8 class labels ['stop', 'up', 'yes', 'right', 'left', 'no',  'down', 'go'] to be predicted. The data set can either be downloaded from the following link
-"http://storage.googleapis.com/download.tensorflow.org/data/mini_speech_commands.zip", or automatically been downloaded when running the code
+"http://storage.googleapis.com/download.tensorflow.org/data/mini_speech_commands.zip", or automatically been downloaded when running the code.
 
 
