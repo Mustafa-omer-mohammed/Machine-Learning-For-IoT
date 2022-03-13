@@ -216,3 +216,31 @@ def S_pruning_Model_evaluate_and_compress_to_TFlite( tflite_model_dir =  TFLITE 
     print( "*" *50,"\n",f'Temp mae = {error[0]:.3f}: , HUM mae = {error[1]:.3f} ')
 
     return saving_path
+    
+ 
+######################################################### Function to Apply Quantization  #########################################################
+def apply_Quantization(tflite_model_dir =  TFLITE ,  PQT = False , WAPQT = False , saving_path = None ): 
+ 
+    converter = tf.lite.TFLiteConverter.from_saved_model(saving_path)
+    # Apply weight only Post Training quantization  
+    if PQT == True :
+        tflite_model_dir = f"{tflite_model_dir}"        
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        tflite_model = converter.convert()
+    # Apply weight + Activation Post Training quantization 
+    if WAPQT == True :
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.representative_dataset = representative_dataset_gen
+        tflite_model = converter.convert()
+        
+        tflite_model_dir = f"{tflite_model_dir}"
+      
+    # Write the model in binary formate and save it 
+    with open(tflite_model_dir, 'wb') as fp:
+        fp.write(tflite_model)
+    Compressed =  f"{tflite_model_dir}.zlib"
+    with open(Compressed, 'wb') as fp:
+        tflite_compressed = zlib.compress(tflite_model)
+        fp.write(tflite_compressed)
+    print("*" *50,"\n",f"the Quantized TF lite model is saved successfuly to {tflite_model_dir}")
+    return Compressed , tflite_model_dir 
