@@ -126,3 +126,9 @@ class SignalGenerator:
             ds = ds.shuffle(100, reshuffle_each_iteration=True)
 
         return ds
+######################################################## Generate Data set splits #########################################################
+
+generator = SignalGenerator(LABELS, 16000, **options)
+train_ds = generator.make_dataset(train_files, True)
+val_ds = generator.make_dataset(val_files, False)
+test_ds = generator.make_dataset(test_files, False)
