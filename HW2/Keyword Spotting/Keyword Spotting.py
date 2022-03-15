@@ -10,7 +10,60 @@ import tensorflow_model_optimization as tfmot
 
 # Note : Python version used to excute the code is 3.7.11
 
-#$$$$$$$$$$$$$
+######################################################### Input Parameters #########################################################
+parser = argparse.ArgumentParser()
+parser.add_argument('--version', type=str, required=True, help=' version to be excuted choose from [a,b,c] ')
+args = parser.parse_args()
+
+version = args.version
+################## Fix the Random seed to reproduce the same results 
+seed = 42
+tf.random.set_seed(seed)
+np.random.seed(seed)
+
+units = 8   # fix the units to number of class labels = 8 [8: stop words without silence , 9: with silence]
+
+######################################################## Options for version a
+if version == "a" :
+    m = "ds_cnn"   # model name [ mlp , cnn , ds_cnn  ]
+    alpha = 0.5    # The width multiplier used to apply the structured Pruning 
+    mfcc = True    # True --> excute mfcc , False --> excute STFT
+
+    MFCC_OPTIONS = {'frame_length': 640, 'frame_step': 320, 'mfcc': True,'lower_frequency': 20, 'upper_frequency': 4000 , 'num_mel_bins': 40,'num_coefficients': 10}
+
+ ######################################################## Options for version b   
+if version == "b" :
+    m = "cnn"   # model name [ mlp , cnn , ds_cnn  ]
+    alpha = 0.4    # The width multiplier used to apply the structured Pruning 
+    mfcc = True    # True --> excute mfcc , False --> excute STFT
+    MFCC_OPTIONS = {'frame_length': 1024, 'frame_step': 400, 'mfcc': True,  'lower_frequency': 20, 'upper_frequency': 4000, 'num_mel_bins': 16, 'num_coefficients': 10}
+
+######################################################## Options for version c
+if version == "c" :
+    m = "ds_cnn"   # model name [ mlp , cnn , ds_cnn  ]
+    alpha = 0.3    # The width multiplier used to apply the structured Pruning 
+    mfcc = True    # True --> excute mfcc , False --> excute STFT
+    MFCC_OPTIONS = {'frame_length': 1024, 'frame_step': 400, 'mfcc': True,  'lower_frequency': 20, 'upper_frequency': 4000, 'num_mel_bins': 16, 'num_coefficients': 10}
+
+
+STFT_OPTIONS = {'frame_length': 256, 'frame_step': 128, 'mfcc': False}  # always achieved low performance results 
+
+model_version = f"_V_{version}_alpha={alpha}"
+
+mymodel = m + model_version
+TFLITE =  f'Group26_kws_{version}.tflite'                                 # path for saving the best model after converted to TF.lite model 
+
+
+if mfcc is True:
+    options = MFCC_OPTIONS
+    strides = [2, 1]
+else:
+    options = STFT_OPTIONS
+    strides = [2, 2]
+
+########################################################
+print(f"EXCUTING MODEL {mymodel}")
+
 
 ######################################################## Reading the data and split to Train , Validation and Test #########################################################
 
@@ -32,7 +85,7 @@ test_files = tf.convert_to_tensor(np.loadtxt("kws_test_split.txt" , dtype = str 
 LABELS = np.array(['stop', 'up', 'yes', 'right', 'left', 'no',  'down', 'go'] , dtype = str) 
 print (f"The LABELS order as provided to the model are {LABELS}")
 
-#$$$$$$$$$$$$$
+
 ######################################################## Create the SignalGenerator #########################################################
 
 
@@ -322,3 +375,27 @@ def Q_Aware_T_Tflite_save(filepath = Q_aware_checkpoint_filepath):
         fp.write(tflite_compressed)
     print("*"*50,"\n",f"the model is saved successfuly to {QAT_tflite_model_dir}")
     return QAT_tflite_model_dir , Compressed
+########################################################  Execute version A :
+if version == "a" :
+    # convert to Tf lite and apply Post Trianing Quantization with weights only :
+    Compressed , Quantized  = S_pruning_Model_evaluate_and_compress_to_TFlite(tflite_model_dir =  TFLITE ,  PQT = True)
+    
+    # Evaluate the Tflite model 
+    load_and_evaluation(Quantized , test_ds , Compressed)
+
+if version == "b" :
+    # apply quantization aware Trainig before quantization  :
+    Quantization_aware_traning(filepath = checkpoint_filepath , checkpoint_callback = Q_aware_model_checkpoint_callback )
+    # convert to Tf lite and apply Post Trianing Quantization  :
+    QAT_tflite_model_dir , Q_Aware_T_Compressed = Q_Aware_T_Tflite_save(filepath = Q_aware_checkpoint_filepath)
+    # Evaluate the Tflite model 
+    load_and_evaluation(QAT_tflite_model_dir, test_ds , Q_Aware_T_Compressed)
+
+
+
+if version == "c" :
+    # convert to Tf lite and apply Post Trianing Quantization with weights only :
+    Compressed , Quantized  = S_pruning_Model_evaluate_and_compress_to_TFlite(tflite_model_dir =  TFLITE ,  PQT = True)
+    
+    # Evaluate the Tflite model 
+    load_and_evaluation(Quantized , test_ds , Compressed)
