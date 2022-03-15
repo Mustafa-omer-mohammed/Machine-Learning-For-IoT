@@ -132,3 +132,38 @@ generator = SignalGenerator(LABELS, 16000, **options)
 train_ds = generator.make_dataset(train_files, True)
 val_ds = generator.make_dataset(val_files, False)
 test_ds = generator.make_dataset(test_files, False)
+
+########################################################  building the models ########################################################
+cnn = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(filters=int(128 *alpha), kernel_size=[3,3], strides=strides, use_bias=False , name = "Conv2D-1"),
+    tf.keras.layers.BatchNormalization(momentum=0.1 , name = "Btch_Norm-1"),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.Conv2D(filters=int(128 *alpha), kernel_size=[3,3], strides=[1,1], use_bias=False , name = "Conv2D-2"),
+    tf.keras.layers.BatchNormalization(momentum=0.1 , name = "Btch_Norm-2"),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.Conv2D(filters=int(128 *alpha), kernel_size=[3,3], strides=[1,1], use_bias=False , name = "Conv2D-3"),
+    tf.keras.layers.BatchNormalization(momentum=0.1 , name = "Btch_Norm-3"),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.GlobalAveragePooling2D( name =  "GlobalAveragePooling-Layer"),
+    tf.keras.layers.Dense(units = units, name =  "Output-Layer")
+])
+
+ds_cnn = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(filters=int(256 *alpha), kernel_size=[3,3], strides=strides, use_bias=False, name = "Conv2D-1"),
+    tf.keras.layers.BatchNormalization(momentum=0.1),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.DepthwiseConv2D(kernel_size=[3, 3], strides=[1, 1], use_bias=False, name = "DepthwiseConv2D-1"),
+    tf.keras.layers.Conv2D(filters=int(256 *alpha), kernel_size=[1,1], strides=[1,1], use_bias=False, name = "Conv2D-2"),
+    tf.keras.layers.BatchNormalization(momentum=0.1),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.DepthwiseConv2D(kernel_size=[3, 3], strides=[1, 1], use_bias=False, name = "DepthwiseConv2D-2"),
+    tf.keras.layers.Conv2D(filters=int(256 *alpha), kernel_size=[1,1], strides=[1,1], use_bias=False, name = "Conv2D-3"),
+    tf.keras.layers.BatchNormalization(momentum=0.1),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.GlobalAveragePooling2D( name =  "GlobalAveragePooling-Layer"),
+    tf.keras.layers.Dense(units = units, name =  "Output-Layer")
+])
+
+
+MODELS = {'cnn'+ model_version: cnn, 'ds_cnn'+ model_version: ds_cnn}
+# print(MODELS.keys())
