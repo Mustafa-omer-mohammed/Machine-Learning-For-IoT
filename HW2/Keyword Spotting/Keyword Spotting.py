@@ -181,3 +181,18 @@ metrics = [tf.keras.metrics.SparseCategoricalAccuracy()]
 ################### Compiling the model :
 
 model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
+
+######################################################## check points depending on preprocessing STFT , MFCC 
+if mfcc is False:
+    checkpoint_filepath = f'./checkpoints/stft/chkp_best_{mymodel}'
+
+else:
+    checkpoint_filepath = f'./checkpoints/mfcc/chkp_best_{mymodel}'
+    
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,           
+    monitor='val_sparse_categorical_accuracy',
+    verbose=1,
+    mode='max',
+    save_best_only=True,
+    save_freq='epoch')
