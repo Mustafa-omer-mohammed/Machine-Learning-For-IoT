@@ -221,3 +221,52 @@ print(model.summary())
 best_model = tf.keras.models.load_model(filepath = checkpoint_filepath )
 Loss , ACCURACY = best_model.evaluate(test_ds)
 print("*"*50,"\n",f" The accuracy achieved by the best model before convertion = {ACCURACY *100:0.2f}% ")
+# Function for weight and activations quantization 
+def representative_dataset_gen():
+    for x, _ in train_ds.take(1000):
+        yield [x]    
+    
+########################################################  Structured Pruning + Quantization  ########################################################
+
+def S_pruning_Model_evaluate_and_compress_to_TFlite(tflite_model_dir =  TFLITE , without_Q = False,  PQT = False , WAPQT = False ,  checkpoint_filepath = checkpoint_filepath ):
+    if not os.path.exists('./models'):
+        os.makedirs('./models')   
+    
+    converter = tf.lite.TFLiteConverter.from_saved_model(checkpoint_filepath)
+
+     # Convert to TF lite without Quantization 
+    if without_Q == True :   
+        tflite_model = converter.convert()  
+        Compressed = f"{tflite_model_dir}.zlib"
+        tflite_model_dir = './models/'+tflite_model_dir
+        # Write the model in binary formate and save it 
+        with open(tflite_model_dir, 'wb') as fp:
+            fp.write(tflite_model)
+        Compressed = './models/'+Compressed
+        with open(Compressed, 'wb') as fp:
+            tflite_compressed = zlib.compress(tflite_model)
+            fp.write(tflite_compressed)
+        print("*"*50,"\n",f"the model is saved successfuly to {tflite_model_dir}")
+        return Compressed , tflite_model_dir 
+    else:
+        # Apply weight only quantization 
+        if PQT == True :
+            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+            tflite_model = converter.convert()
+        # Apply weight + Activation  quantization 
+        if WAPQT == True :
+            converter.optimizations = [tf.lite.Optimize.DEFAULT]
+            converter.representative_dataset = representative_dataset_gen
+            tflite_model = converter.convert()
+            
+        Compressed =  f"{tflite_model_dir}.zlib"
+        tflite_model_dir =   f"./models/{tflite_model_dir}"
+        # Write the model in binary formate and save it 
+        with open(tflite_model_dir, 'wb') as fp:
+            fp.write(tflite_model)
+        Compressed = f"./models/{Compressed}"
+        with open(Compressed, 'wb') as fp:
+            tflite_compressed = zlib.compress(tflite_model)
+            fp.write(tflite_compressed)
+        print(f"the model is saved successfuly to {tflite_model_dir}")
+        return Compressed , tflite_model_dir 
