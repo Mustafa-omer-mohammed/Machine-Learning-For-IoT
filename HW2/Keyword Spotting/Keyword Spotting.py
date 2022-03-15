@@ -304,3 +304,21 @@ def Quantization_aware_traning(filepath = checkpoint_filepath , checkpoint_callb
     best_model = tf.keras.models.load_model(filepath = Q_aware_checkpoint_filepath )
     Loss , ACCURACY = best_model.evaluate(test_ds)
     print("*"*50,"\n",f" The accuracy achieved by the best model before convertion = {ACCURACY *100:0.2f}% ")
+######################################################## Quantization Aware model saving ########################################################
+def Q_Aware_T_Tflite_save(filepath = Q_aware_checkpoint_filepath):
+    if not os.path.exists('./models'):
+        os.makedirs('./models')
+    converter = tf.lite.TFLiteConverter.from_saved_model(filepath)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    tflite_model = converter.convert()
+    Compressed = F"{TFLITE}.zlib"
+    QAT_tflite_model_dir = './models/'+TFLITE
+    # Write the model in binary formate and save it 
+    with open(QAT_tflite_model_dir, 'wb') as fp:
+        fp.write(tflite_model)
+    Compressed = './models/'+Compressed
+    with open(Compressed, 'wb') as fp:
+        tflite_compressed = zlib.compress(tflite_model)
+        fp.write(tflite_compressed)
+    print("*"*50,"\n",f"the model is saved successfuly to {QAT_tflite_model_dir}")
+    return QAT_tflite_model_dir , Compressed
