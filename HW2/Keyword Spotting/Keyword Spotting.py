@@ -270,3 +270,37 @@ def S_pruning_Model_evaluate_and_compress_to_TFlite(tflite_model_dir =  TFLITE ,
             fp.write(tflite_compressed)
         print(f"the model is saved successfuly to {tflite_model_dir}")
         return Compressed , tflite_model_dir 
+######################################################## Quantization aware Training ########################################################
+
+Q_aware_checkpoint_filepath = F'Q_aware_chkp_best_{mymodel}'
+    
+Q_aware_model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=Q_aware_checkpoint_filepath,           
+    monitor='val_sparse_categorical_accuracy',
+    verbose=1,
+    mode='max',
+    save_best_only=True,
+    save_freq='epoch')
+def Quantization_aware_traning(filepath = checkpoint_filepath , checkpoint_callback = Q_aware_model_checkpoint_callback ):
+
+    quantize_model = tfmot.quantization.keras.quantize_model
+    
+    # Retrieve the best pre_trained model float 32 
+    model = tf.keras.models.load_model(filepath = filepath )
+    
+    # Initiate a Quantization aware model from the Float 32 model to be trained 
+    q_aware_model = quantize_model(model)
+    
+    # Model compile and define loss and metric 
+    q_aware_model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
+    
+    # Train the model for few epochs 
+    q_aware_model_history = q_aware_model.fit(train_ds, epochs=10,   validation_data=val_ds,callbacks=[checkpoint_callback ])
+    
+    ############################## Print Model Summary ####################
+    print(q_aware_model.summary())
+    
+    ############################## Evaluate the best model  #################### 
+    best_model = tf.keras.models.load_model(filepath = Q_aware_checkpoint_filepath )
+    Loss , ACCURACY = best_model.evaluate(test_ds)
+    print("*"*50,"\n",f" The accuracy achieved by the best model before convertion = {ACCURACY *100:0.2f}% ")
