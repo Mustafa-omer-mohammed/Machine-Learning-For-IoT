@@ -196,3 +196,28 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     mode='max',
     save_best_only=True,
     save_freq='epoch')
+######################################################## Model Training ########################################################
+
+history = model.fit(train_ds, epochs=20,   validation_data=val_ds,callbacks=[model_checkpoint_callback ])
+
+############################## Print Model Summary ####################
+print(model.summary())    
+
+############################## Plot The training and validation losses ####################
+# import matplotlib.pyplot as plt
+# def plot_loss(history):
+#     plt.plot(history.history['sparse_categorical_accuracy'], label='Accuracy')
+#     plt.plot(history.history['val_sparse_categorical_accuracy'], label='val_Accuracy')
+#     plt.xlabel('Epoch')
+#     plt.ylabel('Accuracy')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.savefig(mymodel+".png")
+
+# plot_loss(history)
+
+########################################################  Evaluate the best model on test data  ########################################################
+
+best_model = tf.keras.models.load_model(filepath = checkpoint_filepath )
+Loss , ACCURACY = best_model.evaluate(test_ds)
+print("*"*50,"\n",f" The accuracy achieved by the best model before convertion = {ACCURACY *100:0.2f}% ")
