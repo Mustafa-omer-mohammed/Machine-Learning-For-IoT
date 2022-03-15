@@ -167,3 +167,17 @@ ds_cnn = tf.keras.Sequential([
 
 MODELS = {'cnn'+ model_version: cnn, 'ds_cnn'+ model_version: ds_cnn}
 # print(MODELS.keys())
+
+######################################################## Define optimizer & Losses & Metrics ########################################################
+
+
+model = MODELS[mymodel]              # initiate the selected model 
+
+loss = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = tf.optimizers.Adam()
+metrics = [tf.keras.metrics.SparseCategoricalAccuracy()]
+
+
+################### Compiling the model :
+
+model.compile(loss = loss, optimizer = optimizer, metrics = metrics)
