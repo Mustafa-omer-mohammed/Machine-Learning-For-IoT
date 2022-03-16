@@ -1,3 +1,2 @@
 The aim of this homework is to show how the use of different communication protocols depending on the requirments 
-the trade off between accuracy, latency and energy consumbtion and how it's related to the choice of preprocessing pipeline. The design of Edge-Cloud Collaborative Inference system 
-to reduce the amount of the sent data, hence reduce the latency and energy consumbtion, while maintaining a good level of accuracy. 
+the trade off between accuracy, latency and energy consumbtion and how it's related to the choice of preprocessing pipeline. The design of Edge-Cloud Collaborative Inference system to reduce the amount of the sent data, hence reduce the latency and energy consumbtion, while maintaining a good level of accuracy. 
