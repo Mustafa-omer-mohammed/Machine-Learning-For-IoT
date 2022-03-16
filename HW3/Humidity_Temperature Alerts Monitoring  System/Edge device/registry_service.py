@@ -15,19 +15,45 @@ import numpy as np
 class ADD(object):
     exposed = True
 
-    def GET(self, *path):          
-        pass
+    def GET(self, *path):        
+       pass
 
-  
+    ##################### Post is the suitable HTTP method  ####################
     def POST(self, *path, **query):
 
-        pass
+        ##### Adding models 
+        body = cherrypy.request.body.read()
+        body = json.loads(body)
+        model_string = body.get('model')
+        model_name = body.get('name')
+        
+
+        ##################### Control errors ####################
+        if model_string is None: 
+            raise cherrypy.HTTPError(400, 'Model empty')
+        if model_name is None: 
+            raise cherrypy.HTTPError(400, 'Model name empty')
+
+        #################### ####################  ####################
+
+        # receive the string, pass it to 64 decode
+        model_base64 = base64.b64decode(model_string)
+
+        if not os.path.exists('./models'):      ### create a directory model if not existed
+                os.mkdir('models')
+
+        path_file=f'./models/{model_name}.tflite'
+
+        ##### SAVE THE MODEL AS .tflite
+        with open(path_file , 'wb') as f:
+            f.write(model_base64)
 
     def PUT(self, *path, **query):
-        pass
+            pass
 
     def DELETE(self, *path, **query):
         pass
+
 
 ############################################ CLASS LIST ############################################
 
