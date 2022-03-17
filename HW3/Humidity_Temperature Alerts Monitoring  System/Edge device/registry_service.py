@@ -60,8 +60,23 @@ class ADD(object):
 class LIST(object):
     exposed = True
 
-    def GET(self, *path):          
-        pass
+    ##################### GET is the suitable HTTP method  ####################
+    def GET(self, *path):
+        out = {}
+        
+        if not os.path.exists('./models'):
+            print("send error code")
+            raise cherrypy.HTTPError(400, 'Directory ./models missing')
+        else:
+            models=[]
+            for x in os.listdir('./models'):
+                if x.endswith(".tflite"):
+                    models.append(x)
+            out={'models':models}
+
+        output = json.dumps(out)
+        return output
+
 
     def POST(self, *path, **query):
 
