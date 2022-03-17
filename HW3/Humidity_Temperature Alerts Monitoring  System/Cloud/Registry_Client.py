@@ -42,6 +42,17 @@ def main() :
             print(f" model {model_name} was added Successfully")
         else:
             print('Error:', r_add.status_code)
+    ######################################### List service #########################################
+
+
+    url_list = 'http://192.168.43.114:8080/list'
+    r_list = requests.get(url_list)
+    content = r_list.json()
+    length = len (content["models"])
+    if length != 2 :
+        print(f" Error : the list lenght is {length} != 2 ") 
+    else :
+        print(f"the list lenght is {length} \n the models saved are {content['models']} ")
 
 
 if __name__ == "__main__":
