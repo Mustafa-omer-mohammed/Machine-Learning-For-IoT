@@ -54,7 +54,19 @@ def main() :
     else :
         print(f"the list lenght is {length} \n the models saved are {content['models']} ")
 
+    ######################################### Predict service #########################################
 
+    model_name = 'cnn'
+    tthres=0.1
+    hthres=0.2
+    url_predict = f'http://192.168.43.114:8080/predict?model={model_name}&tthres={tthres}&hthres={hthres}'
+    r_predict = requests.get(url_predict)
+
+    
+    if r_predict.status_code == 200:
+        print(f" Executing predict with model={model_name} tthres={tthres} hthres={hthres}")
+    else:
+        print('Error:', r_predict.status_code)
 if __name__ == "__main__":
     main()   
 
