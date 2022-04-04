@@ -6,4 +6,4 @@ Collaborative Inference frameworks generally comprise the following components:
 (iii) a “success checker” policy to determine whether the Fast inference was “confident” about its prediction or not; if not, run the Slow inference to get the final prediction
 
 
-![edge cloud](ML4Iots/HW3/Edge-Cloud%20Collaborative%20Inference/edge_cloud.png)
+![edge cloud](ML4Iots/HW3/Edge-Cloud%20Collaborative%20Inference/edge_cloud.PNG)
