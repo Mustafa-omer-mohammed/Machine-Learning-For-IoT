@@ -26,4 +26,27 @@ labels = [re.sub("'","", x.strip()) for x in labels]
 labels = np.array(labels , dtype = str) 
 labels =  tf.convert_to_tensor(labels)
 
+############ Create the Keywords Spotting Class KWS ######################3
+class  KWS(object):
+    exposed = True
 
+    def GET(self, *path, **query):
+        pass
+
+    def POST(self, *path, **query):
+        pass
+
+    def PUT(self, *path, **query):
+
+        pass
+    def DELETE(self, *path, **query):
+        pass
+
+
+if __name__ == '__main__':
+    conf = {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}}
+    cherrypy.tree.mount(KWS(), '', conf)
+    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
+    cherrypy.config.update({'server.socket_port': 8080})
+    cherrypy.engine.start()
+    cherrypy.engine.block()
