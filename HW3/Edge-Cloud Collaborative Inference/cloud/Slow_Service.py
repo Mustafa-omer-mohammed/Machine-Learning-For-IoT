@@ -26,6 +26,16 @@ labels = [re.sub("'","", x.strip()) for x in labels]
 labels = np.array(labels , dtype = str) 
 labels =  tf.convert_to_tensor(labels)
 
+
+############################### define Utility Functions ###############################
+
+def compute(  frame_length ,  num_mel_bins, sampling_rate, 
+                    lower_frequency, upper_frequency):
+    num_spectrogram_bins = (frame_length) // 2 + 1 
+    linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(num_mel_bins, num_spectrogram_bins, sampling_rate,
+                    lower_frequency, upper_frequency)
+    return linear_to_mel_weight_matrix
+
 ############ Create the Keywords Spotting Class KWS ######################3
 class  KWS(object):
     exposed = True
