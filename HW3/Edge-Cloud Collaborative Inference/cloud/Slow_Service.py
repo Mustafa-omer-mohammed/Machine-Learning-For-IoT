@@ -83,7 +83,40 @@ class  KWS(object):
 
     def PUT(self, *path, **query):
 
-        pass
+        body = cherrypy.request.body.read()
+        body = json.loads(body)
+        for event in body["e"] :
+            if event ["n"] == 'audio' :
+                audio_string = event['vd']
+        # Managing Errors 
+        if audio_string is None:
+            raise cherrypy.HTTPError(400, 'audio missing')
+        # first_recived = body.get("first_recived")
+
+        mfccs = self.preprocess(audio_string=audio_string)	
+        # print('Preprocessing {:.3f}ms'.format(preprocessing))
+        interpreter = tf.lite.Interpreter(model_path='./kws_dscnn_True.tflite') # get the selected model
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        interpreter.set_tensor(input_details[0]['index'], mfccs)
+        interpreter.invoke()
+        predicted = interpreter.get_tensor(output_details[0]['index'])
+        soft_max = softmax(predicted)
+        predicted_label = int(np.argmax(soft_max)) 
+        # predicted_prob = np.max(soft_max) 
+        print(f"Slow service predicted_label {predicted_label} ")
+
+
+
+
+        output = {
+                    'prediction': predicted_label,
+                }
+
+        output_json = json.dumps(output)
+
+        return output_json
     def DELETE(self, *path, **query):
         pass
 
