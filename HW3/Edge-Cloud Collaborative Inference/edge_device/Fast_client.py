@@ -140,6 +140,77 @@ class KWS(object):
 		check ,best , sec_best= success_checker(soft_max)
 		return  predicted_label , check , best ,sec_best, audio_string,best , label_id ,excution , label_t
 
+if __name__ == '__main__':
+	MFCC_OPTIONS = {'frame_length': 1024, 'frame_step': 310, 'lower_frequency': 20, 'upper_frequency': 4000, 'num_mel_bins': 40, 'num_coefficients': 10}
+	# MFCC_OPTIONS = {'frame_length': 640, 'frame_step': 320,   'lower_frequency': 20, 'upper_frequency': 4000, 'num_mel_bins': 16, 'num_coefficients': 10}
+	first = True
+	total_inference_time = 0
+	i = 0
+	slow = 0
+	count = 0
+	total = len(test_files)
+	cost = 0
+	for filename in test_files:
+		print("*" * 100)
+		print('  \r ',i,"\n",end='') 
+		if first == True :
+			print("\n computing")
+			linear_to_mel_weight_matrix = compute( frame_length = 1024,  num_mel_bins = 40, sampling_rate = 16000, 
+                    lower_frequency = 20, upper_frequency = 4000)
+			first = False
+		# print(f"first == {first}")
+		kw_spotting = KWS(labels , filename ,linear_to_mel_weight_matrix, **MFCC_OPTIONS)
+		predicted_label , check , best ,sec_best, audio_string,best , label_id , excution,label_t = kw_spotting.predict()
+		print(f"\n Actual label is {label_id} , {label_t}")
+		print(f"fast predicted label is {predicted_label }  probability {best*100 :0.2f}%  2nd prob ={sec_best*100 :0.2f}%  and diff = {check*100 :0.3f}% ")
+		if best >=  0.49 and int(predicted_label) == label_id :
+				count += 1
+		if best < 0.49:
+			# print(f"model predection is {soft_max} ,    {soft_max.sum()} \n")
+			slow += 1
+			print("Sending to the slow pipeline")
+
+			url = 'http://192.168.43.99:8080/predict'  ### the notebook ip address
+			# PACK INFO INTO A JSON
+			to_predict = {
+                        "bn": "raspberrypi.local",
+                        "e": [{"n": "audio", "u": "/", "t": 0, "vd": audio_string}]}
+			to_predict_senML_json = json.dumps(to_predict)
+			
+			size = sys.getsizeof(json.dumps(to_predict_senML_json))
+			print(f"size = {size / 1048576} Mb")
+			cost += size
+			r = requests.put(url, json=to_predict)
+			if r.status_code == 200:
+				# print(r.text)
+				rbody = r.json()
+				# prob = rbody['prediction']
+				slow_pred = rbody['prediction']
+				if int(slow_pred) == label_id :
+						count +=1
+				print(f"The slow prediction is {slow_pred}")
+			else:
+				print("Error")
+				print(r.text)
+		
+		
+		
+		print('Total inference {:.3f}ms'.format(excution))
+		total_inference_time += excution
+
+		i += 1
+		# if i == 100 :
+			# break
+		time.sleep(1)
+	print(f"i = {i} and total = {total}")
+	# print(total_inference_time)
+	avg_total_inference_time = total_inference_time / i 
+	print(f"correct predictions = {count}")
+	accuracy = count / i 
+
+	print(f"accuracy = {accuracy * 100} % ")
+	print(f"communication cost = {cost / 1048576} Mb and {slow} files sent to slow pipeline")
+	print(f"The average Total inference time is {avg_total_inference_time} ms")
 
 
 
