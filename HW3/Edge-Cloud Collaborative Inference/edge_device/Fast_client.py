@@ -30,6 +30,39 @@ labels = [re.sub("'","", x.strip()) for x in labels]
 labels = np.array(labels , dtype = str) 
 labels =  tf.convert_to_tensor(labels)
 
+############################### define Utility Functions ###############################
+
+# Resampling function
+def res(audio, sampling_rate):        
+    audio = signal.resample_poly(audio, 1, 16000 // sampling_rate)
+    return np.array(audio, dtype = np.float32)
+
+# Translation of the resampling function from a numpy function to a tensorflow function
+def tf_function(audio, sampling_rate):
+    audio = tf.numpy_function(res, [audio, sampling_rate], tf.float32)
+    return audio
+####### softmax implementation  in numpy #############
+def softmax(x):
+    f_x = np.exp(x) / np.sum(np.exp(x))
+    return f_x
+############ Success checker policy function ##################
+def success_checker (probabilityes):
+	probabilityes = np.squeeze(probabilityes , axis=0)
+	sorted_pro = np.sort(probabilityes)[::-1]
+	# print(sorted_pro)
+	best , sec_best = sorted_pro[:2]
+	# print(best ,sec_best )
+	dif = best - sec_best
+	return dif , best ,sec_best
+############## compute the linear to weigh matrix function ##############
+def compute(  frame_length ,  num_mel_bins, sampling_rate, 
+                    lower_frequency, upper_frequency):
+    num_spectrogram_bins = (frame_length) // 2 + 1 
+    linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(num_mel_bins, num_spectrogram_bins, sampling_rate,
+                    lower_frequency, upper_frequency)
+    return linear_to_mel_weight_matrix
+
+
 ###### The Kyewards Spotting Class ############
 
 class KWS(object):
